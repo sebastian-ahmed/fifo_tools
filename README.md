@@ -53,10 +53,10 @@ The output of the simulator looks as follows:
 
 ```
 FIFO sim condition summary
-Max payload size   = 1000
+Payload size       = 1000
 Write Bandwidth    = 110
-Read Badwidth      = 100
-FIFO depth         = 2000
+Read Bandwidth     = 100
+Max FIFO depth     = 2000
 Initial FIFO level = 4
 
 Running simulation...
@@ -66,15 +66,16 @@ Started Fifo consumer thread...
 depth = 2000
 push-count = 1000
 pop-count = 1000
-write port nop-count = 905
-read port nop-count = 1203
-total op-count = 4108
-Fifo max-level reached = 141
+write port nop-count = 945
+read port nop-count = 1125
+total op-count = 4070
+Fifo max-level reached = 94
+Effective push:pop bandwidth ratio = 1.19
 error-status = False ()
 
 Simulation PASSED
 
-Required Fifo depth per static calculation = 91
+Required Fifo depth per formulaic calculation = 91
 ```
 
 The *nop-count* values reflect the cycles during which the read or write port did not perform operations. The ratio of the read and write nop-counts should reflect the relative bandwidths of each port. You may find that you need to run a larger simulation payload to avoid seeing distributions which appear biased.
@@ -92,11 +93,11 @@ The output of the simulator looks as follows:
 
 ```
 FIFO sim condition summary
-Max payload size   = 1000
+Payload size       = 1000
 Write Bandwidth    = 110
-Read Badwidth      = 100
-FIFO depth         = 128
-Initial FIFO level = 1
+Read Bandwidth     = 100
+Max FIFO depth     = 2000
+Initial FIFO level = 4
 
 Skipping simulation...
 
