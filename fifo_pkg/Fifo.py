@@ -101,5 +101,6 @@ class Fifo(object):
         rstr += f"read port nop-count = {self._rnopCount}\n"
         rstr += f"total op-count = {self._wnopCount+self._rnopCount+self._pushCount+self._popCount}\n"
         rstr += f"Fifo max-level reached = {self._maxLevel}\n"
+        rstr += f"Effective push:pop bandwidth ratio = {self._rnopCount/self._wnopCount:.2f}\n"
         rstr += f"error-status = {self.error} ({self._errorType})\n"
         return rstr
