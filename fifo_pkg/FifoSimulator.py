@@ -10,13 +10,15 @@
 
 import concurrent.futures
 import random
+import math
+import numpy as np
 
 from fifo_pkg.Fifo import Fifo
 
 class FifoSimulator(object):
     '''
     Class which simulates a Fifo object using independent producer and consumer threads.
-    Each thread operates on the same Fifo object and uses a binary random distrubtion for
+    Each thread operates on the same Fifo object and uses a weighted random distrubtion for
     its operation based on the relative read/write bandwidths
     '''
     def __init__(self,fifoHandle:Fifo,pl_size:int=128,writeBandwidth:int=100,readBandwidth:int=100,initLevel:int=None):
@@ -32,6 +34,7 @@ class FifoSimulator(object):
             self._fifo.bulk_pushes(1) # Always assume one entry in the FIFO before we start the sim
 
     def producer_thread(self):
+        print("Started Fifo producer thread...")
         rem_pl = self._pl_size - self._init_level
         while rem_pl>0 and not self._fifo.error:
             if FifoSimulator.getRandomBool([self._wrate,self._rrate])==True:
@@ -41,6 +44,7 @@ class FifoSimulator(object):
                 self._fifo.wnop()
 
     def consumer_thread(self):
+        print("Started Fifo consumer thread...")
         rem_pl = self._pl_size
         while rem_pl>0 and not self._fifo.error:
             if FifoSimulator.getRandomBool([self._rrate,self._wrate])==True:
@@ -49,7 +53,23 @@ class FifoSimulator(object):
             else:
                 self._fifo.rnop()
 
+    def calcDepth(self):
+        '''
+        Calculates required FIFO depth based on simple rate ratio formula.
+        The forumula does not take into account any latencies
+        '''
+        # The required depth of the FIFO depends on whether the read or write rate is higher
+        wdepth = self._pl_size * (1.0 - float(self._rrate)/float(self._wrate))
+        rdepth = self._pl_size * (1.0 - float(self._wrate)/float(self._rrate))
+        return math.ceil(max((wdepth),(rdepth)))
+    
     def simulate(self):
+        '''
+        Performs the multi-threaded simulation
+        '''
+
+        print("Running simulation...\n")
+
         producer_fhandle = lambda : self.producer_thread()
         consumer_fhandle = lambda : self.consumer_thread()
 
@@ -58,6 +78,23 @@ class FifoSimulator(object):
         with concurrent.futures.ThreadPoolExecutor(max_workers=None) as executor:
             _ = {executor.submit(x): x for x in threadList}
 
+        print(self._fifo)
+        if self._fifo.error:
+            print("Simulation FAILED!")
+        else:
+            print("Simulation PASSED")
+
+        print(f"\nRequired Fifo depth per static calculation = {self.calcDepth()}")
+
     @staticmethod
-    def getRandomBool(probs:list)->bool:
-        return random.choices([True,False],probs,k=1)[0]
+    def getRandomBool(freqs:list)->bool:
+        '''
+        Generate a random boolean based on the absolute frequencies of input list freqs
+        '''
+        # Note: I have found little difference between using the numpy RNG and the 
+        # random.choices built-in library. In each case there appears to be a bias
+        # for the first element in the sequence.
+        problist = [float(x/sum(freqs)) for x in freqs]
+        rng = np.random.default_rng()
+        return rng.choice(a=[True,False], size=1, replace=True, p=problist)[0]
+        #return random.choices([True,False],weights=freqs,k=1)[0]

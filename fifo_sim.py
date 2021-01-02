@@ -40,9 +40,7 @@ def main():
 
     simulator = FifoSimulator(fifoHandle=fifo,pl_size=args.plsize,writeBandwidth=args.writebw,readBandwidth=args.readbw,initLevel=args.initlevel)
 
-    print("Running simulation...\n")
     simulator.simulate()
-    print(fifo)
 
 if __name__ == '__main__':
     with WinWrap(main) as handle:
