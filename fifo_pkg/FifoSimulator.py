@@ -21,12 +21,21 @@ class FifoSimulator(object):
     Each thread operates on the same Fifo object and uses a weighted random distrubtion for
     its operation based on the relative read/write bandwidths
     '''
-    def __init__(self,fifoHandle:Fifo,pl_size:int=128,writeBandwidth:int=100,readBandwidth:int=100,initLevel:int=None):
+    def __init__(
+        self,
+        fifoHandle:Fifo,
+        pl_size:int=128,
+        writeBandwidth:int=100,
+        readBandwidth:int=100,
+        initLevel:int=None,
+        nosim:bool=False):
         self._fifo       = fifoHandle
         self._pl_size    = pl_size
         self._wrate      = writeBandwidth
         self._rrate      = readBandwidth
         self._init_level = initLevel
+        self._nosim      = nosim
+
         if initLevel:
             assert initLevel<self._fifo.depth, f"Specified init_level={initLevel} greater or equal to depth={self._fifo.depth}"
             self._fifo.bulk_pushes(initLevel)
@@ -65,26 +74,29 @@ class FifoSimulator(object):
     
     def simulate(self):
         '''
-        Performs the multi-threaded simulation
+        Performs the multi-threaded simulation and formulaic calculation
         '''
 
-        print("Running simulation...\n")
-
-        producer_fhandle = lambda : self.producer_thread()
-        consumer_fhandle = lambda : self.consumer_thread()
-
-        threadList = [producer_fhandle, consumer_fhandle]
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=None) as executor:
-            _ = {executor.submit(x): x for x in threadList}
-
-        print(self._fifo)
-        if self._fifo.error:
-            print("Simulation FAILED!")
+        if self._nosim:
+            print("Skipping simulation...\n")
         else:
-            print("Simulation PASSED")
+            print("Running simulation...\n")
 
-        print(f"\nRequired Fifo depth per static calculation = {self.calcDepth()}")
+            producer_fhandle = lambda : self.producer_thread()
+            consumer_fhandle = lambda : self.consumer_thread()
+
+            threadList = [producer_fhandle, consumer_fhandle]
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=None) as executor:
+                _ = {executor.submit(x): x for x in threadList}
+
+            print(self._fifo)
+            if self._fifo.error:
+                print("Simulation FAILED!")
+            else:
+                print("Simulation PASSED")
+
+        print(f"\nRequired Fifo depth per formulaic calculation = {self.calcDepth()}")
 
     @staticmethod
     def getRandomBool(freqs:list)->bool:

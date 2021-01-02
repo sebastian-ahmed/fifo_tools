@@ -19,13 +19,14 @@ from fifo_pkg.FifoSimulator import FifoSimulator
 
 def main():
 
-    parser = argparse.ArgumentParser(description='Wrapper script to simulate a FIFO model')
-    parser.add_argument('--depth',     metavar='<integer>', type=int,  help='Number of entries in the FIFO',       default=128)
-    parser.add_argument('--plsize',    metavar='<integer>', type=int,  help='Payload size in number of datums',    default=512)
-    parser.add_argument('--writebw',   metavar='<integer>', type=int,  help='Write bandwidth in datums/unit time', default=1024)
-    parser.add_argument('--readbw',    metavar='<integer>', type=int,  help='Read bandwidth in datums/unit time',  default=1280)
-    parser.add_argument('--initlevel', metavar='<integer>', type=int,  help='Initial FIFO level',                  default=1)
-    parser.add_argument('--verbose',   action='store_true',            help='Report all operations',               default=False)
+    parser = argparse.ArgumentParser(description='A basic FIFO simulator and size calculator')
+    parser.add_argument('--depth',     metavar='<integer>', type=int,  help='Max number of entries in the FIFO (simulation only)', default=128)
+    parser.add_argument('--plsize',    metavar='<integer>', type=int,  help='Payload size in number of datums',                    default=512)
+    parser.add_argument('--writebw',   metavar='<integer>', type=int,  help='Write bandwidth in datums/unit time',                 default=1024)
+    parser.add_argument('--readbw',    metavar='<integer>', type=int,  help='Read bandwidth in datums/unit time',                  default=1280)
+    parser.add_argument('--initlevel', metavar='<integer>', type=int,  help='Initial FIFO level (simulation only)',                default=1)
+    parser.add_argument('--nosim',     action='store_true',            help='Skip simulation, and only perform formulaic analysis')
+    parser.add_argument('--verbose',   action='store_true',            help='Report all operations (simulation only)')
 
     args = parser.parse_args()
 
@@ -38,10 +39,16 @@ def main():
 
     fifo = Fifo(args.depth,verbose=args.verbose)
 
-    simulator = FifoSimulator(fifoHandle=fifo,pl_size=args.plsize,writeBandwidth=args.writebw,readBandwidth=args.readbw,initLevel=args.initlevel)
+    simulator = FifoSimulator(
+        fifoHandle=fifo,
+        pl_size=args.plsize,
+        writeBandwidth=args.writebw,
+        readBandwidth=args.readbw,
+        initLevel=args.initlevel,
+        nosim=args.nosim)
 
     simulator.simulate()
 
 if __name__ == '__main__':
-    with WinWrap(main) as handle:
-        handle()
+    with WinWrap(main) as wmain:
+        wmain()
