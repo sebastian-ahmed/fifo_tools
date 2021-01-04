@@ -37,7 +37,7 @@ def main():
     print(f"Max FIFO depth     = {args.depth}")
     print(f"Initial FIFO level = {args.initlevel}\n")
 
-    fifo = Fifo(args.depth,verbose=args.verbose)
+    fifo = Fifo(depth=args.depth,verbose=args.verbose)
 
     simulator = FifoSimulator(
         fifoHandle=fifo,
