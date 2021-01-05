@@ -1,5 +1,5 @@
 # Overview
-This project includes useful tools to aid designers in the education of the sizing of FIFO constructs.
+This project includes useful tools to aid designers in the education of the sizing of FIFO constructs. It was originally created to provide an example simulator for an article on sizing hardware FIFOs (see [here](https://sebastian-ahmed.medium.com/a-primer-on-sizing-hardware-fifos-c1db97b9a25e))
 
 # System Requirements
 - Python 3.6 or later version
