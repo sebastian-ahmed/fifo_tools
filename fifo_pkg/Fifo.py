@@ -9,7 +9,6 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 import threading
-import time
 
 class Fifo(object):
     '''
@@ -26,14 +25,11 @@ class Fifo(object):
         self._error     = False # Error flag
         self._errorType = ''    # Error cause string
         self._wnopCount = 0     # Write(push) no-operation count
-        self._rnopCount = 0     # Read(pop)  no-operation count
+        self._rnopCount = 0     # Read(pop)   no-operation count
         self._maxLevel  = 0     # Maximum level of Fifo during its lifetime
     
         # Thread synchronization lock (bound)
         self.__lock = threading.Lock()
-
-    def sleep(self):
-        time.sleep(0.001)
 
     def bulk_pushes(self,num_pushes:int):
         self._pushCount = num_pushes
@@ -72,7 +68,6 @@ class Fifo(object):
             if self._verbose:
                 print(f"Pushed entry (level = {self.level})\n")
             self._pushCount +=1
-            self.sleep()
 
     def pop(self):
         if self.empty:
@@ -83,15 +78,12 @@ class Fifo(object):
             if self._verbose:
                 print(f"Popped entry (level = {self.level})\n")
             self._popCount +=1
-            self.sleep()
 
     def wnop(self):
         self._wnopCount += 1
-        self.sleep()
 
     def rnop(self):
         self._rnopCount += 1
-        self.sleep()
 
     def __str__(self):
         rstr  = f"depth = {self._depth}\n"
