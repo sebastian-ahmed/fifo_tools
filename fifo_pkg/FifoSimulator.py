@@ -19,7 +19,8 @@ from fifo_pkg.Fifo import Fifo
 
 class FifoSimulator(object):
     '''
-    Class which simulates a Fifo object using independent producer and consumer threads.
+    Class which simulates a Fifo object using independent producer and consumer threads with
+    a simple simulation kernel with a configurable simulation quantum
     Each thread operates on the same Fifo object and uses a weighted random distrubtion for
     its operation based on the relative read/write bandwidths
     '''
@@ -30,13 +31,22 @@ class FifoSimulator(object):
         writeBandwidth:int=100,
         readBandwidth:int=100,
         initLevel:int=None,
-        nosim:bool=False):
+        nosim:bool=False,
+        simQuantum:int=1):
         self._fifo       = fifoHandle
         self._pl_size    = pl_size
         self._wrate      = writeBandwidth
         self._rrate      = readBandwidth
         self._init_level = initLevel
         self._nosim      = nosim
+
+        assert pl_size > simQuantum, f"simQuantum ({simQuantum}) > pl_size({pl_size})"
+
+        if simQuantum <= 0:
+            self._simQuantum = self.autoQuantum()
+            print(f"Auto quantum-mode selected. Caclulated quantum={self._simQuantum}\n")
+        else:
+            self._simQuantum = simQuantum
 
         if initLevel:
             assert initLevel<self._fifo.depth, f"Specified init_level={initLevel} greater or equal to depth={self._fifo.depth}"
@@ -52,6 +62,7 @@ class FifoSimulator(object):
         }
 
         self._maxqlen = 0 # Debug variable to track maximum size of sim kernel event queue
+        self._evcount = 0 # Debug variable to track total number of simulation events
         self._pendq = [] # Pended event queue
         self._threadCount = 0 # Number of active sim kernel threads
 
@@ -61,6 +72,12 @@ class FifoSimulator(object):
         # Flag to reflect that all pushes are done which allows consumer thread to no longer
         # block and just finish consuming
         self._pushesDone = False
+
+    def autoQuantum (self)->int:
+        '''
+        Determines automatic sim quantum based on payload size
+        '''
+        return int(max(1,self._pl_size/1000))
 
     def threadStart(self):
         self.__lock.acquire()
@@ -86,13 +103,14 @@ class FifoSimulator(object):
         based on the pend queue order. As pended events are popped from the key, they
         are set to unblock each thread.
         '''
-        time.sleep(1) # Block time for threads to register active state
+        time.sleep(0.1) # Block time for threads to register active state
         print("Starting kernel thread...")
         while self._threadCount > 0:
             if len(self._pendq) > 0:
                 if len(self._pendq) > self._maxqlen:
                     self._maxqlen = len(self._pendq)
                 cur_ev = self._pendq.pop(0)
+                self._evcount += 1
                 assert not cur_ev.is_set(), "Event queue ERROR, active event found"
                 cur_ev.set()
                 cur_ev.clear()
@@ -101,14 +119,19 @@ class FifoSimulator(object):
         self.threadStart()
         print("Started Fifo producer thread...")
         rem_pl = self._pl_size - self._init_level
+        quant_count = self._simQuantum
         while rem_pl>0 and not self._fifo.error:
             if FifoSimulator.getRandomBool([self._wrate,self._rrate])==True:
                 self._fifo.push()
                 rem_pl -= 1
             else:
                 self._fifo.wnop()
-            self.threadPend(ev)
-            ev.wait()
+            if quant_count == 1:
+                quant_count = self._simQuantum # reset the quantum
+                self.threadPend(ev)
+                ev.wait()
+            else:
+                quant_count -= 1
         self._pushesDone = True # Tell consumer, we are done pushing
         self.threadEnd()
 
@@ -116,6 +139,7 @@ class FifoSimulator(object):
         self.threadStart()
         print("Started Fifo consumer thread...")
         rem_pl = self._pl_size
+        quant_count = self._simQuantum
         while rem_pl>0 and not self._fifo.error:
             # Don't call the randomizer if producer is done as this skewes the effective
             # bandwidth ratio metrics
@@ -126,8 +150,12 @@ class FifoSimulator(object):
                 self._fifo.rnop()
             # Only pend if the producer thread is still active
             if not self._pushesDone:
-                self.threadPend(ev)
-                ev.wait()
+                if quant_count == 1:
+                    quant_count = self._simQuantum # reset the quantum
+                    self.threadPend(ev)
+                    ev.wait()
+                else:
+                    quant_count -= 1
         self.threadEnd()
 
     def calcDepth(self):
@@ -148,7 +176,7 @@ class FifoSimulator(object):
         if self._nosim:
             print("Skipping simulation...\n")
         else:
-            print("Running simulation...\n")
+            print("Running simulation...")
 
             kernel_fcall   = lambda : self.kernel_thread() 
             producer_fcall = lambda : self.producer_thread(ev=self._kernelEvents['e_producer'])
@@ -159,6 +187,11 @@ class FifoSimulator(object):
                 _ = {executor.submit(x): x for x in threadList}
 
             print(self._fifo)
+            print("Simulation metrics:")
+            print(f"Simulation event queue peak size  = {self._maxqlen}")
+            print(f"Simulation quantum size           = {self._simQuantum}")
+            print(f"Total number of simulation events = {self._evcount}")
+            print(f"Total simulation time (seconds)   = {time.process_time():.1f}\n")
             if self._fifo.error:
                 print("Simulation FAILED!")
             else:

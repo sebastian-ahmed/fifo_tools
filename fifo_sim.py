@@ -25,6 +25,7 @@ def main():
     parser.add_argument('--writebw',   metavar='<integer>', type=int,  help='Write bandwidth in datums/unit time',                 default=1024)
     parser.add_argument('--readbw',    metavar='<integer>', type=int,  help='Read bandwidth in datums/unit time',                  default=1280)
     parser.add_argument('--initlevel', metavar='<integer>', type=int,  help='Initial FIFO level (simulation only)',                default=1)
+    parser.add_argument('--quantum',   metavar='<integer>', type=int,  help='Number of sim steps per sim quantum',                    default=1)
     parser.add_argument('--nosim',     action='store_true',            help='Skip simulation, and only perform formulaic analysis')
     parser.add_argument('--verbose',   action='store_true',            help='Report all operations (simulation only)')
 
@@ -35,7 +36,8 @@ def main():
     print(f"Write Bandwidth    = {args.writebw}")
     print(f"Read Bandwidth     = {args.readbw}")
     print(f"Max FIFO depth     = {args.depth}")
-    print(f"Initial FIFO level = {args.initlevel}\n")
+    print(f"Initial FIFO level = {args.initlevel}")
+    print(f"Sim quantum        = {args.quantum}\n")
 
     fifo = Fifo(depth=args.depth,verbose=args.verbose)
 
@@ -45,7 +47,8 @@ def main():
         writeBandwidth=args.writebw,
         readBandwidth=args.readbw,
         initLevel=args.initlevel,
-        nosim=args.nosim)
+        nosim=args.nosim,
+        simQuantum=args.quantum)
 
     simulator.simulate()
 
