@@ -203,10 +203,13 @@ class FifoSimulator(object):
     def getRandomBool(freqs:list)->bool:
         '''
         Generate a random boolean based on the absolute frequencies of input list freqs
+        Uses a weighted distribution from the Numpy random number generator
         '''
         # Note: I have found little difference between using the numpy RNG and the 
         # random.choices built-in library. In each case there appears to be a bias
         # for the first element in the sequence.
+        # Note that using a Bernoulli or a single-trial Binomial distribution actually
+        # yielded more skewed distributions than numpy.random
         problist = [float(x/sum(freqs)) for x in freqs]
         rng = np.random.default_rng()
         return rng.choice(a=[True,False], size=1, replace=True, p=problist)[0]
