@@ -51,6 +51,10 @@ class Fifo(object):
         return self._error
 
     @property
+    def errorType(self)->str:
+        return self._errorType
+
+    @property
     def level(self)->int:
         self.__lock.acquire()
         tmp = self._pushCount - self._popCount
@@ -59,6 +63,13 @@ class Fifo(object):
         self.__lock.release()
         return tmp
         
+    @property
+    def bwratio(self)->float:
+        '''
+        Write to Read effective bandwidth ratio
+        '''
+        return (self._rnopCount/self._wnopCount)
+
     def push(self):
         if self.full:
             print("Error: FIFO is full!")
@@ -93,6 +104,6 @@ class Fifo(object):
         rstr += f"read port nop-count    = {self._rnopCount}\n"
         rstr += f"total op-count         = {self._wnopCount+self._rnopCount+self._pushCount+self._popCount}\n"
         rstr += f"Fifo max-level reached = {self._maxLevel}\n"
-        rstr += f"Simulated W:R BW ratio = {self._rnopCount/self._wnopCount:.2f}\n"
-        rstr += f"error-status flag      = {self.error} ({self._errorType})\n"
+        rstr += f"Simulated W:R BW ratio = {self.bwratio:.2f}\n"
+        rstr += f"error-status flag      = {self.error} ({self.errorType})\n"
         return rstr
