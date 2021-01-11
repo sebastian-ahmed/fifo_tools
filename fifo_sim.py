@@ -31,13 +31,15 @@ def main():
 
     args = parser.parse_args()
 
-    print("FIFO sim condition summary")
-    print(f"Payload size       = {args.plsize}")
-    print(f"Write Bandwidth    = {args.writebw}")
-    print(f"Read Bandwidth     = {args.readbw}")
-    print(f"Max FIFO depth     = {args.depth}")
-    print(f"Initial FIFO level = {args.initlevel}")
-    print(f"Sim quantum        = {args.quantum}\n")
+    print("Simulation config summary:")
+    print("--------------------------")
+    print(f"Payload size           = {args.plsize}")
+    print(f"Requested Write BW     = {args.writebw}")
+    print(f"Requested Read BW      = {args.readbw}")
+    print(f"Requested W:R BW ratio = {float(args.writebw/args.readbw):.2f}")
+    print(f"Max FIFO depth         = {args.depth}")
+    print(f"Initial FIFO level     = {args.initlevel}")
+    print(f"Sim quantum            = {args.quantum}\n")
 
     fifo = Fifo(depth=args.depth,verbose=args.verbose)
 

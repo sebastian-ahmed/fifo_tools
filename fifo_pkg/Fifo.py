@@ -86,13 +86,13 @@ class Fifo(object):
         self._rnopCount += 1
 
     def __str__(self):
-        rstr  = f"depth = {self._depth}\n"
-        rstr += f"push-count = {self._pushCount}\n"
-        rstr += f"pop-count = {self._popCount}\n"
-        rstr += f"write port nop-count = {self._wnopCount}\n"
-        rstr += f"read port nop-count = {self._rnopCount}\n"
-        rstr += f"total op-count = {self._wnopCount+self._rnopCount+self._pushCount+self._popCount}\n"
+        rstr  = f"depth                  = {self._depth}\n"
+        rstr += f"push-count             = {self._pushCount}\n"
+        rstr += f"pop-count              = {self._popCount}\n"
+        rstr += f"write port nop-count   = {self._wnopCount}\n"
+        rstr += f"read port nop-count    = {self._rnopCount}\n"
+        rstr += f"total op-count         = {self._wnopCount+self._rnopCount+self._pushCount+self._popCount}\n"
         rstr += f"Fifo max-level reached = {self._maxLevel}\n"
-        rstr += f"Effective push:pop bandwidth ratio = {self._rnopCount/self._wnopCount:.2f}\n"
-        rstr += f"error-status = {self.error} ({self._errorType})\n"
+        rstr += f"Simulated W:R BW ratio = {self._rnopCount/self._wnopCount:.2f}\n"
+        rstr += f"error-status flag      = {self.error} ({self._errorType})\n"
         return rstr
