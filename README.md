@@ -58,33 +58,39 @@ The example below shows usage to simulate a FIFO with the following characterist
 The output of the simulator looks as follows:
 
 ```
-FIFO sim condition summary
-Payload size       = 1000
-Write Bandwidth    = 110
-Read Bandwidth     = 100
-Max FIFO depth     = 2000
-Initial FIFO level = 4
-Sim quantum        = 1
+Simulation config summary:
+--------------------------
+Payload size           = 1000
+Requested Write BW     = 110
+Requested Read BW      = 100
+Requested W:R BW ratio = 1.10
+Max FIFO depth         = 2000
+Initial FIFO level     = 16
+Sim quantum            = 10
 
 Running simulation...
 Started Fifo producer thread...
 Started Fifo consumer thread...
 Starting kernel thread...
-depth = 2000
-push-count = 1000
-pop-count = 1000
-write port nop-count = 879
-read port nop-count = 923
-total op-count = 3802
-Fifo max-level reached = 144
-Effective push:pop bandwidth ratio = 1.05
-error-status = False ()
+
+FIFO Simulation Summary:
+-------------------------
+depth                  = 2000
+push-count             = 1000
+pop-count              = 1000
+write port nop-count   = 887
+read port nop-count    = 965
+total op-count         = 3852
+Fifo max-level reached = 114
+Simulated W:R BW ratio = 1.09
+error-status flag      = False ()
 
 Simulation metrics:
+-------------------
 Simulation event queue peak size  = 2
-Simulation quantum size           = 1
-Total number of simulation events = 3659
-Total simulation time (seconds)   = 19.8
+Simulation quantum size           = 10
+Total number of simulation events = 374
+Total simulation time (seconds)   = 1.4
 
 Simulation PASSED
 
@@ -152,3 +158,11 @@ There are four main pieces to this class:
 Each thread registers itself with the kernel which allows the kernel to monitor the number of active threads. This allows the kernel thread to complete once all client threads finish. This particular design can thus support more than the two threads in the simulator.
 
 It can thus be noted that increasing the *quantum* value allows each of the producer/consumer threads to perform their operations in "zero-time" without being blocked for a larger sequence of their operations. Operations within the quantum are thus not sequenced by the kernel, and there can be no assumptions on the relative ordering of push and pop operations within the quantum (which is the source of short-term innacuracy). Increasing the quantum size does not however change the overall bandwidth ratio, but can result in underrun or overrun errors that otherwise may not have occurred. 
+
+## Statistical Model
+During the course of developing the simulator different random methods were experimented with, at the time of writing I have settled on using the simple **binomial distrubution** from which to draw the *random variable*. This distribution is configured for a single *trial* per simulation event (which should make it behave like a *Bernoulli* distribution). The distribution is configured as follows:
+- For the producer side, the *success event* is a push operation, otherwise a no-operation is performed. The target probability is *p(W)*=BW(write)/(BW(write)+BW(read))
+- For the consumer side, the *success event* is a pop operation, with *p(R)*=BW(read)/(BW(write)+BW(read))
+- It should be noted that *p(W) + p(R) = 1*
+
+Each thread calls the probability distribution with its bandwidth context (write or read). The simulation reports out the simulated effective bandwidth which can be compared with the requested bandwidth.
