@@ -50,9 +50,9 @@ The example below shows usage to simulate a FIFO with the following characterist
 - Simulated payload size : 1000 samples/datums
 - Relative write bandwidth : 110
 - Relative read bandwidth  : 100
-- Initial FIFO level (priming FIFO pushes) : 4
+- Initial FIFO level (priming FIFO pushes) : 16
 ```
-./fifo_sim.py --depth 2000 --plsize 1000 --writebw 110 --readbw 100 --initlevel 4
+./fifo_sim.py --depth 2000 --plsize 1000 --writebw 110 --readbw 100 --initlevel 16
 ```
 
 The output of the simulator looks as follows:
