@@ -166,3 +166,6 @@ During the course of developing the simulator different random methods were expe
 - It should be noted that *p(W) + p(R) = 1*
 
 Each thread calls the probability distribution with its bandwidth context (write or read). The simulation reports out the simulated effective bandwidth which can be compared with the requested bandwidth.
+
+## Testing
+To aid in maintainability and enable modification/extension, there exists a simple test-script which runs basic tests and checks for various conditions via asserts. This can be run by executing the `test.py` script. If running from Windows shell, run as `python test.py`
