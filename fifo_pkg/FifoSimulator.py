@@ -41,6 +41,7 @@ class FifoSimulator(object):
         self._nosim      = nosim
 
         assert pl_size > simQuantum, f"simQuantum ({simQuantum}) > pl_size({pl_size})"
+        assert initLevel<self._pl_size, f"Specified init_level={initLevel} greater or equal to pl_size={self._pl_size}"
 
         if simQuantum <= 0:
             self._simQuantum = self.autoQuantum()
@@ -161,7 +162,7 @@ class FifoSimulator(object):
     def calcDepth(self):
         '''
         Calculates required FIFO depth based on simple rate ratio formula.
-        The forumula does not take into account any latencies
+        The formula does not take into account any latencies
         '''
         # The required depth of the FIFO depends on whether the read or write rate is higher
         wdepth = self._pl_size * (1.0 - float(self._rrate)/float(self._wrate))
