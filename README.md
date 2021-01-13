@@ -7,6 +7,7 @@ This project includes useful tools to aid designers in the education of the sizi
 
 # Key Features
 - Simulation and parameter calculation of arbitrary FIFO sizes, payloads and consumer/producer relative bandwidths
+- Thread based simulation to model concurrency with a statistical model for consumer/producer activity 
 - Ability to bypass simulation and perform formulaic analysis only
 - Simulation 'speed vs short-term accuracy' control via simulator kernel *quantum* size setting, including auto-sizing mode based on payload size
 
