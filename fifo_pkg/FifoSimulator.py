@@ -55,20 +55,24 @@ class FifoSimulator(object):
         else:
             self._fifo.bulk_pushes(1) # Always assume one entry in the FIFO before we start the sim
 
-        # We create a pair of events per thread to communicate with the sim kernel. The first
-        # event in each list is used to signal blocking, the second is used to signal end of the thread
+        # We create a single event object per thread. Each thread communicates with the kernel by
+        # pushing its inactive event into a pend-queue and then blocking by waiting for that event
+        # to become active.
         self._kernelEvents = {
             'e_producer' : threading.Event(),
             'e_consumer' : threading.Event()
         }
 
-        self._maxqlen = 0 # Debug variable to track maximum size of sim kernel event queue
-        self._evcount = 0 # Debug variable to track total number of simulation events
-        self._pendq = [] # Pended event queue
+        self._maxqlen = 0     # Stat variable to track maximum size of sim kernel event queue
+        self._evcount = 0     # Stat variable to track total number of simulation events
+        self._pendq = []      # Pended events queue
         self._threadCount = 0 # Number of active sim kernel threads
 
         # Thread synchronization lock (bound)
         self.__lock = threading.Lock()
+
+        # Thread call handles
+        self._threadList = []
 
         # Flag to reflect that all pushes are done which allows consumer thread to no longer
         # block and just finish consuming
@@ -90,7 +94,7 @@ class FifoSimulator(object):
         self._threadCount -= 1
         self.__lock.release()
 
-    def threadPend(self,ev):
+    def threadPend(self,ev:threading.Event):
         '''
         This method places a blocking thread's event into a pend queue
         '''
@@ -101,7 +105,7 @@ class FifoSimulator(object):
     def kernel_thread(self):
         '''
         This thread implements a simple simulator kernel which sequences thread events
-        based on the pend queue order. As pended events are popped from the key, they
+        based on the pend queue order. As pended events are popped from the queue, they
         are set to unblock each thread.
         '''
         time.sleep(0.1) # Block time for threads to register active state
@@ -112,11 +116,12 @@ class FifoSimulator(object):
                     self._maxqlen = len(self._pendq)
                 cur_ev = self._pendq.pop(0)
                 self._evcount += 1
+                # The below assertion checks that any event pulled from queue must be inactive
                 assert not cur_ev.is_set(), "Event queue ERROR, active event found"
                 cur_ev.set()
                 cur_ev.clear()
 
-    def producer_thread(self,ev):
+    def producer_thread(self,ev:threading.Event):
         self.threadStart()
         print("Started Fifo producer thread...")
         rem_pl = self._pl_size - self._init_level
@@ -126,7 +131,7 @@ class FifoSimulator(object):
                 self._fifo.push()
                 rem_pl -= 1
             else:
-                self._fifo.wnop()
+                self._fifo.wnop() # no-operation
             if quant_count == 1:
                 quant_count = self._simQuantum # reset the quantum
                 self.threadPend(ev)
@@ -136,7 +141,7 @@ class FifoSimulator(object):
         self._pushesDone = True # Tell consumer, we are done pushing
         self.threadEnd()
 
-    def consumer_thread(self,ev):
+    def consumer_thread(self,ev:threading.Event):
         self.threadStart()
         print("Started Fifo consumer thread...")
         rem_pl = self._pl_size
@@ -148,7 +153,7 @@ class FifoSimulator(object):
                 self._fifo.pop()
                 rem_pl -= 1
             else:
-                self._fifo.rnop()
+                self._fifo.rnop() # no-operation
             # Only pend if the producer thread is still active
             if not self._pushesDone:
                 if quant_count == 1:
@@ -179,13 +184,13 @@ class FifoSimulator(object):
         else:
             print("Running simulation...")
 
-            kernel_fcall   = lambda : self.kernel_thread() 
-            producer_fcall = lambda : self.producer_thread(ev=self._kernelEvents['e_producer'])
-            consumer_fcall = lambda : self.consumer_thread(ev=self._kernelEvents['e_consumer'])
-            threadList = [kernel_fcall,producer_fcall, consumer_fcall]
+            # Define all thread call handles and add them to the thread-list
+            self._threadList.append(lambda : self.kernel_thread()) 
+            self._threadList.append(lambda : self.producer_thread(ev=self._kernelEvents['e_producer']))
+            self._threadList.append(lambda : self.consumer_thread(ev=self._kernelEvents['e_consumer']))
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=None) as executor:
-                _ = {executor.submit(x): x for x in threadList}
+                _ = {executor.submit(x): x for x in self._threadList}
 
             print("\nFIFO Simulation Summary:")
             print("-------------------------")
