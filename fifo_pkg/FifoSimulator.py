@@ -120,6 +120,8 @@ class FifoSimulator(object):
                 assert not cur_ev.is_set(), "Event queue ERROR, active event found"
                 cur_ev.set()
                 cur_ev.clear()
+        print("Ending kernel thread, no more client threads.")
+        assert len(self._pendq) == 0, "Kernel ERROR, event queue has entries without active threads"
 
     def producer_thread(self,ev:threading.Event):
         self.threadStart()
@@ -189,8 +191,17 @@ class FifoSimulator(object):
             self._threadList.append(lambda : self.producer_thread(ev=self._kernelEvents['e_producer']))
             self._threadList.append(lambda : self.consumer_thread(ev=self._kernelEvents['e_consumer']))
 
+            # max_workers=None essentially does not constrain things
             with concurrent.futures.ThreadPoolExecutor(max_workers=None) as executor:
-                _ = {executor.submit(x): x for x in self._threadList}
+                futures = {executor.submit(x): x for x in self._threadList}
+
+                # The future handle provides an iterator of all threads.
+                # The order of the iterator follows completion.
+                for future in concurrent.futures.as_completed(futures):
+                    try:
+                        _ = future.result()
+                    except Exception as exc:
+                        print(f"{future} : {exc}")
 
             print("\nFIFO Simulation Summary:")
             print("-------------------------")
