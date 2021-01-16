@@ -10,26 +10,16 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, EITHER EXPRESSED OR IMPLIED.
 # See the License for the specific language governing permissions and limitations under the License.
 
-import argparse
 import sys
 
 from fifo_pkg.WinWrap       import WinWrap
 from fifo_pkg.Fifo          import Fifo
 from fifo_pkg.FifoSimulator import FifoSimulator
+from fifo_pkg.CLargs        import proc_cla
 
 def main():
 
-    parser = argparse.ArgumentParser(description='A basic FIFO simulator and size calculator')
-    parser.add_argument('--depth',     metavar='<integer>', type=int,  help='Max number of entries in the FIFO (simulation only)', default=128)
-    parser.add_argument('--plsize',    metavar='<integer>', type=int,  help='Payload size in number of datums',                    default=512)
-    parser.add_argument('--writebw',   metavar='<integer>', type=int,  help='Write bandwidth in datums/unit time',                 default=1024)
-    parser.add_argument('--readbw',    metavar='<integer>', type=int,  help='Read bandwidth in datums/unit time',                  default=1280)
-    parser.add_argument('--initlevel', metavar='<integer>', type=int,  help='Initial FIFO level (simulation only)',                default=1)
-    parser.add_argument('--quantum',   metavar='<integer>', type=int,  help='Number of sim steps per sim quantum',                    default=1)
-    parser.add_argument('--nosim',     action='store_true',            help='Skip simulation, and only perform formulaic analysis')
-    parser.add_argument('--verbose',   action='store_true',            help='Report all operations (simulation only)')
-
-    args = parser.parse_args()
+    args = proc_cla(iparser=None,descr='FIFO simulator and size calculator')
 
     print("Simulation config summary:")
     print("--------------------------")
