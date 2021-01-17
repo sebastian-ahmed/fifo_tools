@@ -23,9 +23,18 @@ We then use a couple of BetterFifo objects to run through push and pop operation
 import random
 import string
 
-from fifo_pkg.Fifo import Fifo
+from fifo_pkg.Fifo    import Fifo
+from fifo_pkg.WinWrap import WinWrap
+
 
 class BetterFifo(Fifo):
+    '''
+    Example extension of the Fifo class, adding the following:
+    - Override bwratio to handle ZeroDivisionError exception
+    - Add a local data store
+    - Override push() and pop() to support data
+    - Add bulk_pop() to perform an arbitrary numnber of pop() operations
+    '''
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
 
@@ -82,7 +91,7 @@ def randstr()->str:
 
 def randFloat()->float:
     '''
-    Returns a random float from a normal distribution with a median of 50.0 and std-dev of 10.0
+    Returns a random float from a normal distribution with a mean of 50.0 and std-dev of 10.0
     '''
     return random.gauss(50.0,10.0)
 
@@ -101,7 +110,7 @@ def doFifoStuff(fifo:BetterFifo,datagenfunc):
 
     print(fifo) # Won't get a ZeroDivisionError exception
 
-def test():
+def main():
     print(__doc__)
 
     # Note we only create two separate objects because in a synthesizable HDL scenario it
@@ -114,4 +123,5 @@ def test():
     doFifoStuff(fifo_of_floats,randFloat)  # Use a BetterFifo to handle floats
 
 if __name__ == '__main__':
-    test()
+    with WinWrap(main) as wmain:
+        wmain()
