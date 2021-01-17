@@ -1,7 +1,7 @@
 # Overview
 This project includes useful tools to aid designers in the education of the sizing of FIFO constructs. It was originally created to provide an example simulator for an article on sizing hardware FIFOs (see [here](https://sebastian-ahmed.medium.com/a-primer-on-sizing-hardware-fifos-c1db97b9a25e))
 
-Within this project there is also an example module [`extensiopn.py`](extension.py) which is used to illustrate how OOP mechanics might look like for synthesizable HDLs referenced in an article about the importance of increasing design-intent abstraction (see [here](https://sebastian-ahmed.medium.com/how-silicon-innovation-could-massively-scale-with-more-abstraction-4291bb3b94fb))
+Within this project there is also an example module [`extension.py`](extension.py) which is used to illustrate how OOP mechanics might look like for synthesizable HDLs referenced in an article about the importance of increasing design-intent abstraction (see [here](https://sebastian-ahmed.medium.com/how-silicon-innovation-could-massively-scale-with-more-abstraction-4291bb3b94fb))
 
 # System Requirements
 - Python 3.6 or later version
