@@ -48,7 +48,7 @@ class BetterFifo(Fifo):
         Class extension which adds the ability to do a bulk set of pops 
         '''
         for _ in range(num_pops):
-            print(f"Popped data = {self.pop()}")
+            self.pop()
 
     def pop(self):
         '''
@@ -58,7 +58,9 @@ class BetterFifo(Fifo):
         '''
         if not self.empty:
             super().pop()
-            return self._data.pop(0)
+            popped_data = self._data.pop(0)
+            print(f"Popped data = {popped_data}")
+            return popped_data
         else:
             super().pop()
 
