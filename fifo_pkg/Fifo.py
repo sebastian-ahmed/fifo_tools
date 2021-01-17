@@ -76,9 +76,9 @@ class Fifo(object):
             self._error = True
             self._errorType = 'overrun'
         else:
+            self._pushCount +=1
             if self._verbose:
                 print(f"Pushed entry (level = {self.level})\n")
-            self._pushCount +=1
 
     def pop(self):
         if self.empty:
@@ -86,9 +86,9 @@ class Fifo(object):
             self._error = True
             self._errorType = 'underrun'
         else:
+            self._popCount +=1
             if self._verbose:
                 print(f"Popped entry (level = {self.level})\n")
-            self._popCount +=1
 
     def wnop(self):
         self._wnopCount += 1
